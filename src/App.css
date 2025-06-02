@@ -1,0 +1,68 @@
+.bg-button {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid white;
+}
+
+.bg-button:hover {
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: 1px solid white;
+}
+
+.font-size-celsius {
+  font-size: 4rem;
+}
+
+.font-size-desc {
+  font-size: 0.8rem;
+}
+
+.font-size-bigger {
+  font-size: 1.5rem;
+}
+
+/* WEATHER BACKGROUNDS */
+
+.bg-card {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.bg-default {
+  background: #2a7b9b;
+  background: linear-gradient(0deg, rgba(42, 123, 155, 1) 0%, rgba(87, 199, 133, 1) 100%);
+}
+
+.bg-sunny {
+  background: #efb917;
+  background: linear-gradient(180deg, rgba(239, 185, 23, 1) 0%, rgba(244, 147, 33, 1) 100%);
+}
+
+.bg-few-clouds {
+  background: #b2e1ff;
+  background: linear-gradient(0deg, rgba(178, 225, 255, 1) 0%, rgba(255, 226, 154, 1) 100%);
+}
+
+.bg-cloudy {
+  background: #74befe;
+  background: linear-gradient(0deg, rgba(116, 190, 254, 1) 0%, rgba(45, 119, 223, 1) 100%);
+}
+
+.bg-broken-clouds {
+  background: #a0b4c8;
+  background: linear-gradient(180deg, rgba(160, 180, 200, 1) 0%, rgba(92, 122, 153, 1) 100%);
+}
+
+.bg-rainy {
+  background: #697e92;
+  background: linear-gradient(0deg, rgba(105, 126, 146, 1) 0%, rgba(72, 92, 120, 1) 100%);
+}
+
+.bg-thunderstorm {
+  background: #3b3b58;
+  background: linear-gradient(180deg, rgba(59, 59, 88, 1) 0%, rgba(31, 31, 44, 1) 100%);
+}
+
+.bg-snow {
+  background: #ffffff;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 1) 0%, rgba(208, 233, 255, 1) 50%, rgba(240, 244, 248, 1) 100%);
+}

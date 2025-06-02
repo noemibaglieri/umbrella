@@ -9,7 +9,8 @@ const Home = () => {
   const [description, setDescription] = useState("");
   const [maxTemp, setMaxTemp] = useState("");
   const [minTemp, setMinTemp] = useState("");
-  const [himidity, setHumidity] = useState("");
+  const [humidity, setHumidity] = useState("");
+  const [forecast, setForecast] = useState("");
 
   const weatherKey = "9de6e6099eefb54cafae8b61e9396a55";
   const proxy = "https://cors-anywhere.herokuapp.com/";
@@ -24,8 +25,8 @@ const Home = () => {
       });
       if (response.ok) {
         const result = await response.json();
-        const lat = result[0]?.lat;
-        const lon = result[0]?.lon;
+        const lat = result[0].lat;
+        const lon = result[0].lon;
         let response2 = await fetch(`${proxy}https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${weatherKey}`, {
           method: "GET",
           headers: {
@@ -60,6 +61,15 @@ const Home = () => {
 
           const weatherDesc = weatherApi.weather[0].description;
           setDescription(weatherDesc);
+
+          let response3 = await fetch(`${proxy}https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${weatherKey}`);
+          if (response3.ok) {
+            const forecastApi = await response3.json();
+            setForecast(forecastApi);
+            console.log("forecast", forecastApi);
+
+            console.log("forecast", forecastApi.list[0].weather[0].description);
+          }
         }
       }
     } catch (error) {
@@ -67,41 +77,188 @@ const Home = () => {
     }
   };
 
+  const changeBgColor = () => {
+    switch (true) {
+      case description.includes("clear"):
+        return "bg-sunny";
+      case description.includes("few clouds"):
+        return "bg-few-clouds";
+      case description.includes("scattered clouds") || description.includes("broken clouds"):
+        return "bg-cloudy";
+      case description.includes("rain") || description.includes("overcast"):
+        return "bg-rainy";
+      case description.includes("thunderstorm"):
+        return "bg-thunderstorm";
+      case description.includes("snow") || description.includes("mist"):
+        return "bg-snow";
+      default:
+        return "bg-default";
+    }
+  };
+
+  const setWeatherIcon = () => {
+    switch (true) {
+      case description.includes("clear"):
+        return "./src/images/sun.png";
+      case description.includes("few clouds"):
+        return "./src/images/cloudy.png";
+      case description.includes("scattered clouds") || description.includes("broken clouds") || description.includes("overcast"):
+        return "./src/images/clouds.png";
+      case description.includes("rain"):
+        return "./src/images/rain.png";
+      case description.includes("thunderstorm"):
+        return "./src/images/thunder.png";
+      case description.includes("snow") || description.includes("mist"):
+        return "./src/images/snow.png";
+      default:
+        return null;
+    }
+  };
+
+  const setWeatherDate = (index) => {
+    const items = [];
+
+    for (let i = 0; i < forecast.list.length; i++) {
+      const item = forecast.list[i];
+      const date = new Date(item.dt_txt);
+      const day = date.getDate();
+      const a = new Date();
+      const today = a.getDate();
+
+      if (
+        !items
+          .map((currentItem) => {
+            const currentItemDate = new Date(currentItem.dt_txt);
+            const currentItemDay = currentItemDate.getDate();
+            return currentItemDay;
+          })
+          .find((currentDay) => currentDay === day) &&
+        day != today
+      ) {
+        items.push(item);
+      }
+    }
+
+    const date = new Date(items[index].dt_txt);
+
+    const month = date.toLocaleString("en-GB", { month: "long" });
+    const day = date.getDate();
+
+    return `${month}, ${day}`;
+  };
+
   return (
     <>
-      <Container className="bg-body-tertiary rounded-4 p-5 text-center">
-        <Row className="justify-content-center mt-5">
-          <Col md={6}>
-            <h1>Do you need an umbrella?</h1>
+      <Container fluid className={`p-5 text-center text-white ${changeBgColor()}`} style={{ height: "100vh" }}>
+        <Row className="justify-content-center">
+          <Col md={6} className="mb-3">
+            <h1 className="display-2 fw-semibold mb-4">Do you need an umbrella?</h1>
             <Container className="d-flex justify-content-center gap-3">
               <Form.Control className="w-50" type="text" placeholder="Find out by typing a city" onChange={(e) => setQuery(e.target.value.toLowerCase())} />
-              <Button type="button" variant="success" onClick={() => getLatAndLon()}>
-                Go!
+              <Button type="button" variant="outline-light" className="bg-card bg-border bg-button" onClick={() => getLatAndLon()}>
+                Find out
               </Button>
             </Container>
           </Col>
         </Row>
-        <Row className="justify-content-center mt-5">
-          <Col md={6}>
-            <h1>{weather.name}</h1>
-            {icon && <img src={icon} alt="weather icon" width={100} />}
-            {celsius && <p className="display-6">{celsius + "°"}</p>}
-            <p>{description}</p>
-            {description &&
-              (description.includes("rain") || description.includes("drizzle") ? (
-                <p>ombrello needed bro</p>
-              ) : (
-                <p>e anche oggi niente ombrello che culo fra oh</p>
-              ))}
-          </Col>
-        </Row>
-        <Row className="justify-content-center">
-          <Col md={2} className="p-2 bg-success rounded-5 justify-content-center">
-            <span>{maxTemp} - </span>
-            <span>{minTemp} - </span>
-            <span>{himidity}</span>
-          </Col>
-        </Row>
+
+        {weather && (
+          <>
+            <Row className="justify-content-center mt-3 text-white mb-3">
+              <Col md={4} className="bg-card rounded-4 p-3">
+                <h1 className="mb-5">{weather.name + ", " + weather.sys.country}</h1>
+                {icon && <img className="mb-5" src={setWeatherIcon()} alt="weather icon" width={200} />}
+                {celsius && <p className="mb-0 font-size-celsius fw-bold">{celsius + "°"}</p>}
+                <p>{description}</p>
+              </Col>
+            </Row>
+            <Row className="justify-content-center mt-3 text-white mb-3">
+              <Col md={4} className="bg-card rounded-4 p-3">
+                {description &&
+                  (description.includes("rain") || description.includes("drizzle") ? (
+                    <span className="mb-0">
+                      <img className="me-3" src="./src/images/umbrelling.png" alt="umbrella" width={50} />
+                      Take this, you'll need it.
+                    </span>
+                  ) : description.includes("overcast") ? (
+                    <span className="mb-0">
+                      <img className="me-3" src="./src/images/umbrelling.png" alt="umbrella" width={50} />
+                      I'd bring one if I were you. Just to be sure.
+                    </span>
+                  ) : (
+                    <span className="mb-0">
+                      <img className="me-3" src="./src/images/umbrellant.png" alt="umbrella" width={50} />
+                      No umbrella needed! It's all sunshine and vibes.
+                    </span>
+                  ))}
+              </Col>
+            </Row>
+            <Row className="justify-content-center">
+              <Col md={4} className="p-3 bg-card rounded-4 justify-content-center">
+                <Row md={3}>
+                  <Col>
+                    <span>
+                      <img src="./src/images/hot.png" alt="high-temp" width={20} />
+                    </span>
+                    <span className="text-uppercase font-size-desc">max temp</span>
+                    <p className="mb-0 font-size-bigger">{maxTemp}°</p>
+                  </Col>
+                  <Col>
+                    <span>
+                      <img src="./src/images/cold.png" alt="low-temp" width={20} />
+                    </span>
+                    <span className="text-uppercase  font-size-desc">min temp</span>
+                    <p className="mb-0 font-size-bigger">{minTemp}°</p>
+                  </Col>
+                  <Col>
+                    <span>
+                      <img src="./src/images/humidity.png" alt="humidity" width={20} />
+                    </span>
+                    <span className="text-uppercase  font-size-desc">humidity </span>
+                    <p className="mb-0 font-size-bigger">{humidity}%</p>
+                  </Col>
+                </Row>
+              </Col>
+            </Row>
+
+            {/* FORECAST TEST  */}
+            <Row className="justify-content-center mt-3">
+              <Col md={4} className="p-3 bg-card rounded-4 justify-content-center">
+                <Row md={5}>
+                  {forecast && (
+                    <>
+                      <Col className="d-flex flex-column justify-content-center gap-3">
+                        <p className="fs-6 mb-0">{setWeatherDate(0)}</p>
+                        <img className="align-self-center" src={setWeatherIcon()} alt="weather icon" width={30} />
+                        <p className="mb-0 fw-semibold fs-5">{celsius + "°"}</p>
+                      </Col>
+                      <Col className="d-flex flex-column justify-content-center gap-3">
+                        <p className="fs-6 mb-0">{setWeatherDate(1)}</p>
+                        <img className="align-self-center" src={setWeatherIcon()} alt="weather icon" width={30} />
+                        <p className="mb-0 fw-semibold fs-5">{celsius + "°"}</p>
+                      </Col>
+                      <Col className="d-flex flex-column justify-content-center gap-3">
+                        <p className="fs-6 mb-0">{setWeatherDate(2)}</p>
+                        <img className="align-self-center" src={setWeatherIcon()} alt="weather icon" width={30} />
+                        <p className="mb-0 fw-semibold fs-5">{celsius + "°"}</p>
+                      </Col>
+                      <Col className="d-flex flex-column justify-content-center gap-3">
+                        <p className="fs-6 mb-0">{setWeatherDate(3)}</p>
+                        <img className="align-self-center" src={setWeatherIcon()} alt="weather icon" width={30} />
+                        <p className="mb-0 fw-semibold fs-5">{celsius + "°"}</p>
+                      </Col>
+                      <Col className="d-flex flex-column justify-content-center gap-3">
+                        <p className="fs-6 mb-0">{setWeatherDate(4)}</p>
+                        <img className="align-self-center" src={setWeatherIcon()} alt="weather icon" width={30} />
+                        <p className="mb-0 fw-semibold fs-5">{celsius + "°"}</p>
+                      </Col>
+                    </>
+                  )}
+                </Row>
+              </Col>
+            </Row>
+          </>
+        )}
       </Container>
     </>
   );
