@@ -1,19 +1,24 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button, Col, Container, Form, Row } from "react-bootstrap";
+import WeatherCard from "./WeatherCard";
 
 const Home = () => {
   const [query, setQuery] = useState("");
   const [weather, setWeather] = useState("");
   const [celsius, setCelsius] = useState("");
-  const [icon, setIcon] = useState("");
   const [description, setDescription] = useState("");
   const [maxTemp, setMaxTemp] = useState("");
   const [minTemp, setMinTemp] = useState("");
   const [humidity, setHumidity] = useState("");
   const [forecast, setForecast] = useState("");
+  const [forecastDays, setForecastDays] = useState([]);
 
   const weatherKey = "9de6e6099eefb54cafae8b61e9396a55";
   const proxy = "https://cors-anywhere.herokuapp.com/";
+
+  const convertFromKelvin = (temp) => {
+    return Math.round(temp - 273.15);
+  };
 
   const getLatAndLon = async () => {
     try {
@@ -37,7 +42,6 @@ const Home = () => {
         if (response2.ok) {
           const weatherApi = await response2.json();
           setWeather(weatherApi);
-          console.log(weatherApi);
 
           const convertFromKelvin = 273.15;
 
@@ -55,10 +59,6 @@ const Home = () => {
           const humidity = weatherApi.main.humidity;
           setHumidity(humidity);
 
-          const iconId = weatherApi.weather[0].icon;
-          const weatherImage = `https://openweathermap.org/img/w/${iconId}.png`;
-          setIcon(weatherImage);
-
           const weatherDesc = weatherApi.weather[0].description;
           setDescription(weatherDesc);
 
@@ -66,9 +66,6 @@ const Home = () => {
           if (response3.ok) {
             const forecastApi = await response3.json();
             setForecast(forecastApi);
-            console.log("forecast", forecastApi);
-
-            console.log("forecast", forecastApi.list[0].weather[0].description);
           }
         }
       }
@@ -96,28 +93,9 @@ const Home = () => {
     }
   };
 
-  const setWeatherIcon = () => {
-    switch (true) {
-      case description.includes("clear"):
-        return "./src/images/sun.png";
-      case description.includes("few clouds"):
-        return "./src/images/cloudy.png";
-      case description.includes("scattered clouds") || description.includes("broken clouds") || description.includes("overcast"):
-        return "./src/images/clouds.png";
-      case description.includes("rain"):
-        return "./src/images/rain.png";
-      case description.includes("thunderstorm"):
-        return "./src/images/thunder.png";
-      case description.includes("snow") || description.includes("mist"):
-        return "./src/images/snow.png";
-      default:
-        return null;
-    }
-  };
-
-  const setWeatherDate = (index) => {
+  const setWeatherDate = () => {
     const items = [];
-
+    if (!forecast.list) return;
     for (let i = 0; i < forecast.list.length; i++) {
       const item = forecast.list[i];
       const date = new Date(item.dt_txt);
@@ -139,13 +117,21 @@ const Home = () => {
       }
     }
 
-    const date = new Date(items[index].dt_txt);
+    setForecastDays(items);
+  };
 
-    const month = date.toLocaleString("en-GB", { month: "long" });
+  const parseDate = (inputDate) => {
+    const date = new Date(inputDate);
+
+    const month = date.toLocaleString("en-GB", { month: "short" });
     const day = date.getDate();
 
     return `${month}, ${day}`;
   };
+
+  useEffect(() => {
+    setWeatherDate();
+  }, [forecast]);
 
   return (
     <>
@@ -164,14 +150,12 @@ const Home = () => {
 
         {weather && (
           <>
+            {/* Today's weather */}
             <Row className="justify-content-center mt-3 text-white mb-3">
-              <Col md={4} className="bg-card rounded-4 p-3">
-                <h1 className="mb-5">{weather.name + ", " + weather.sys.country}</h1>
-                {icon && <img className="mb-5" src={setWeatherIcon()} alt="weather icon" width={200} />}
-                {celsius && <p className="mb-0 font-size-celsius fw-bold">{celsius + "°"}</p>}
-                <p>{description}</p>
-              </Col>
+              <WeatherCard weather={weather.name} country={weather.sys.country} celsius={celsius} description={description} />
             </Row>
+
+            {/* do you need an umbrella? */}
             <Row className="justify-content-center mt-3 text-white mb-3">
               <Col md={4} className="bg-card rounded-4 p-3">
                 {description &&
@@ -193,6 +177,8 @@ const Home = () => {
                   ))}
               </Col>
             </Row>
+
+            {/* more info about today's weather */}
             <Row className="justify-content-center">
               <Col md={4} className="p-3 bg-card rounded-4 justify-content-center">
                 <Row md={3}>
@@ -221,37 +207,22 @@ const Home = () => {
               </Col>
             </Row>
 
-            {/* FORECAST TEST  */}
+            {/* forecast weather */}
             <Row className="justify-content-center mt-3">
               <Col md={4} className="p-3 bg-card rounded-4 justify-content-center">
                 <Row md={5}>
                   {forecast && (
                     <>
-                      <Col className="d-flex flex-column justify-content-center gap-3">
-                        <p className="fs-6 mb-0">{setWeatherDate(0)}</p>
-                        <img className="align-self-center" src={setWeatherIcon()} alt="weather icon" width={30} />
-                        <p className="mb-0 fw-semibold fs-5">{celsius + "°"}</p>
-                      </Col>
-                      <Col className="d-flex flex-column justify-content-center gap-3">
-                        <p className="fs-6 mb-0">{setWeatherDate(1)}</p>
-                        <img className="align-self-center" src={setWeatherIcon()} alt="weather icon" width={30} />
-                        <p className="mb-0 fw-semibold fs-5">{celsius + "°"}</p>
-                      </Col>
-                      <Col className="d-flex flex-column justify-content-center gap-3">
-                        <p className="fs-6 mb-0">{setWeatherDate(2)}</p>
-                        <img className="align-self-center" src={setWeatherIcon()} alt="weather icon" width={30} />
-                        <p className="mb-0 fw-semibold fs-5">{celsius + "°"}</p>
-                      </Col>
-                      <Col className="d-flex flex-column justify-content-center gap-3">
-                        <p className="fs-6 mb-0">{setWeatherDate(3)}</p>
-                        <img className="align-self-center" src={setWeatherIcon()} alt="weather icon" width={30} />
-                        <p className="mb-0 fw-semibold fs-5">{celsius + "°"}</p>
-                      </Col>
-                      <Col className="d-flex flex-column justify-content-center gap-3">
-                        <p className="fs-6 mb-0">{setWeatherDate(4)}</p>
-                        <img className="align-self-center" src={setWeatherIcon()} alt="weather icon" width={30} />
-                        <p className="mb-0 fw-semibold fs-5">{celsius + "°"}</p>
-                      </Col>
+                      {forecastDays.map((day) => {
+                        return (
+                          <WeatherCard
+                            compact={true}
+                            weather={parseDate(day.dt_txt)}
+                            description={day.weather[0].description}
+                            celsius={convertFromKelvin(day.main.temp)}
+                          />
+                        );
+                      })}
                     </>
                   )}
                 </Row>
