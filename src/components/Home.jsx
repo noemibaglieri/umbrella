@@ -216,6 +216,7 @@ const Home = () => {
                       {forecastDays.map((day) => {
                         return (
                           <WeatherCard
+                            key={day}
                             compact={true}
                             weather={parseDate(day.dt_txt)}
                             description={day.weather[0].description}
